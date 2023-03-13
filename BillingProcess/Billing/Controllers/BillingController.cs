@@ -37,7 +37,7 @@ namespace BillingProcess.Controllers
         [ProducesResponseType(typeof(string), 400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(typeof(string), 500)]
-        public async Task<IActionResult> GenerateInvoice([FromBody] List<CDRApiModel> cdrModels)
+        public async Task<IActionResult> GenerateInvoice(List<CDRApiModel> cdrModels)
         {
             try
             {

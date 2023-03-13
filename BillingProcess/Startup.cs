@@ -38,6 +38,8 @@ namespace BillingProcess
 
             services.AddScoped<BillingService>();
 
+            services.AddControllers().AddNewtonsoftJson();
+
             services.AddDbContext<DatabaseContext>(
                 ob => ob.UseSqlServer(Configuration["ConnectionString"],
                 sso => sso.MigrationsAssembly(
