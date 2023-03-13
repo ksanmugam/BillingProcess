@@ -75,7 +75,7 @@ namespace BillingProcess.Controllers
                 if (file.File != null && file.File.Length > 0)
                 {
                     if (Path.GetExtension(file.File.FileName) != ".csv")
-                        return BadRequest("Invalid file type");
+                        return BadRequest("File type not supported");
                     else
                     return Ok(await _billingApi.GenerateInvoiceViaFileAsync(file.File));
                 }
