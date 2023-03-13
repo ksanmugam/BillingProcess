@@ -92,4 +92,63 @@ If all is well, click Send and you should receive your invoices.
 
 If you're reached this far, give yourself a pat on the back! Well done! Look forward to working with you.
 
+## Results
+```bash
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "company": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "name": "string"
+    },
+    "userCalls": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "totalCalls": 0,
+        "totalCost": 0,
+        "totalDuration": 0,
+        "user": {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "name": "string",
+          "phoneNumber": "string"
+        },
+        "inboundCalls": [
+          {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "dateTime": "string",
+            "calledTo": "string",
+            "callFrom": "string",
+            "duration": "string",
+            "gross": 0,
+            "amount": 0
+          }
+        ],
+        "outboundCalls": [
+          {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "dateTime": "string",
+            "calledTo": "string",
+            "callFrom": "string",
+            "duration": "string",
+            "gross": 0,
+            "amount": 0
+          }
+        ],
+        "userCalls": [
+          {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "dateTime": "string",
+            "calledTo": "string",
+            "callFrom": "string",
+            "duration": "string",
+            "gross": 0,
+            "amount": 0
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
 
