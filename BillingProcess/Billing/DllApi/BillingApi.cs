@@ -29,7 +29,7 @@ namespace BillingProcess.Billing.DllApi
         {
             try
             {
-                return _billingService.GenerateInvoice(cdrModels: cdrModels);
+                return _billingService.GenerateDummyInvoice(cdrModels: cdrModels);
             }
             catch (Exception e)
             {

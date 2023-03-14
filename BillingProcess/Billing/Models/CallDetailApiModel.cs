@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BillingProcess.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +47,23 @@ namespace BillingProcess.Billing.Models
             DateTime = dateTime;
             CalledTo = calledTo;
             CallFrom = callFrom;
+            Duration = duration;
+            Gross = gross;
+            Amount = amount;
+        }
+
+        public CallDetailApiModel(Guid id, string dateTime, string duration, double gross, double amount, DirectionType direction, string number)
+        {
+            Id = id;
+            DateTime = dateTime;
+            if (direction == DirectionType.OUTBOUND)
+            {
+                CalledTo = number;
+            }
+            else if (direction == DirectionType.INBOUND)
+            {
+                CallFrom = number;
+            }
             Duration = duration;
             Gross = gross;
             Amount = amount;
