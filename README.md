@@ -90,7 +90,7 @@ Go to *Body*, click form-data, hover over "key" input field and find the hidden 
 
 If all is well, click Send and you should receive your invoices.
 
-If you're reached this far, give yourself a pat on the back! Well done! Look forward to working with you.
+If you've reached this far, give yourself a pat on the back! Well done! Look forward to working with you.
 
 ## Results
 ```bash
