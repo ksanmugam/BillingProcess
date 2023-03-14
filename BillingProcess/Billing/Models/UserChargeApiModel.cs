@@ -32,11 +32,11 @@ namespace BillingProcess.Billing.Models
         /// </summary>
         public UserApiModel User { get; set; }
         /// <summary>
-        /// Inbound calls made/received by the user
+        /// Inbound calls are received by the user
         /// </summary>
         public List<CallDetailApiModel> InboundCalls { get; set; }
         /// <summary>
-        /// Outbound calls made/received by the user
+        /// Outbound calls made by the user
         /// </summary>
         public List<CallDetailApiModel> OutboundCalls { get; set; }
         /// <summary>
@@ -55,6 +55,25 @@ namespace BillingProcess.Billing.Models
             InboundCalls = new List<CallDetailApiModel>();
             OutboundCalls = new List<CallDetailApiModel>();
             UserCalls = new List<CallDetailApiModel>();
+        }
+
+        // Add call detail to user call records
+        public void AddCallDetail(CallDetailApiModel callDetail, DirectionType direction)
+        {
+            switch (direction)
+            {
+                case DirectionType.OUTBOUND:
+                    OutboundCalls.Add(callDetail);
+                    break;
+                case DirectionType.INBOUND:
+                    InboundCalls.Add(callDetail);
+                    break;
+                case DirectionType.USER:
+                    UserCalls.Add(callDetail);
+                    break;
+                default:
+                    break;
+            }
         }
 
         // Update existing user record with new call record

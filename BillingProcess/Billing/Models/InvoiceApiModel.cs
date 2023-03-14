@@ -23,14 +23,14 @@ namespace BillingProcess.Models
         /// <summary>
         /// Call records made by user(s) to be charged
         /// </summary>
-        public List<UserChargeApiModel> UserCalls {get; set;}
+        public List<UserChargeApiModel> CallRecords {get; set;}
 
         #region Constructor
         internal InvoiceApiModel(Guid id, CompanyApiModel company)
         {
             Id = id;
             Company = company;
-            UserCalls = new List<UserChargeApiModel>();
+            CallRecords = new List<UserChargeApiModel>();
         }
         #endregion
     }

@@ -62,7 +62,7 @@ namespace BillingProcess.Billing.Services
                                                 .FirstOrDefault() ?? throw new ArgumentException("Failed to retrieve user");
                             if (userCalling != null)
                             {
-                                // get user rates based on rate type matching with direction
+                                // get user rates based on rate type matching with outbound direction
                                 var userRate = _dbContext.Rates
                                                 .Include(p => p.Plan)
                                                 .Where(r => r.Plan.Id == userCalling.Company.Plan.Id && r.RateType == RateType.OutboundCall.ToString()).OrderBy(a => a.Priority)
@@ -74,17 +74,19 @@ namespace BillingProcess.Billing.Services
                                     // get existing company invoice
                                     var existingInvoice = invoices.Where(a => a.Company.Id == userCalling.Company.Id).FirstOrDefault();
                                     // check if user has a record in the company
-                                    if (existingInvoice.UserCalls.Where(u => u.User.Id == userCalling.Id).Any())
+                                    if (existingInvoice.CallRecords.Where(u => u.User.Id == userCalling.Id).Any())
                                     {
                                         if (userRate != null)
                                         {
-                                            // get exising user call records
-                                            var existingUserRecord = invoices.Where(a => a.Company.Id == userCalling.Company.Id).Select(a => a.UserCalls.Where(a => a.User.Id == userCalling.Id).FirstOrDefault()).FirstOrDefault();
+                                            // get existing user call records
+                                            var existingUserRecord = invoices.Where(a => a.Company.Id == userCalling.Company.Id).Select(a => a.CallRecords.Where(a => a.User.Id == userCalling.Id).FirstOrDefault()).FirstOrDefault();
                                             // get user rate based on destination number against filter
                                             var getFilter = userRate.FirstOrDefault(a => a.Filter == "*" || Regex.IsMatch(cdr.DestinationNumber.ToString(), a.Filter));
 
                                             // formula to calculate call charge
                                             var callCharge = cdr.Duration * (getFilter.RateValue / 60);
+
+                                            // add new call detail
                                             var callDetail = new CallDetailApiModel(Guid.NewGuid(), cdr.ConnectDateTime, new TimeSpan(0, 0, cdr.Duration).ToString(), (getFilter.RateValue / 60), callCharge, cdr.DestinationNumber.ToString());
 
                                             // update existing user call record with new call charge
@@ -104,27 +106,39 @@ namespace BillingProcess.Billing.Services
                                             var callCharge = cdr.Duration * (getFilter.RateValue / 60);
 
                                             // add new user call record against the company invoice
-                                            existingInvoice.UserCalls.Add(new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userCalling), 1, callCharge, cdr.Duration));
+                                            var newUserRecord = new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userCalling), 1, callCharge, cdr.Duration);
+
+                                            // add new call detail to the user
+                                            var newCallRecord = new CallDetailApiModel(Guid.NewGuid(), cdr.ConnectDateTime, new TimeSpan(0, 0, cdr.Duration).ToString(), (getFilter.RateValue / 60), callCharge, cdr.DestinationNumber.ToString());
+                                            newUserRecord.AddCallDetail(newCallRecord, DirectionType.OUTBOUND);
+                                            existingInvoice.CallRecords.Add(newUserRecord);
                                         }
 
                                     }
 
                                 }
-                                // create new invoice against a company
+                                // create new invoice against a new company for a new user
                                 else
                                 {
                                     if (userRate != null)
                                     {
+                                        // create new invoice against a company
+                                        var newInvoice = new InvoiceApiModel(Guid.NewGuid(), CompanyMapper.EntityToApi(userCalling.Company));
+
                                         // get user rate based on destination number against filter
                                         var getFilter = userRate.FirstOrDefault(a => a.Filter == "*" || Regex.IsMatch(cdr.DestinationNumber.ToString(), a.Filter));
 
                                         // formula to calculate call charge
                                         var callCharge = cdr.Duration * (getFilter.RateValue / 60);
 
-                                        // create new invoice against a company
-                                        var newInvoice = new InvoiceApiModel(Guid.NewGuid(), CompanyMapper.EntityToApi(userCalling.Company));
-                                        // add new user call record to the new invoice
-                                        newInvoice.UserCalls.Add(new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userCalling), 1, callCharge, cdr.Duration));
+                                        // add new user call detail and charge record to the new invoice
+                                        var newUserRecord = new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userCalling), 1, callCharge, cdr.Duration);
+
+                                        // add new call detail
+                                        var newCallRecord = new CallDetailApiModel(Guid.NewGuid(), cdr.ConnectDateTime, new TimeSpan(0, 0, cdr.Duration).ToString(), (getFilter.RateValue / 60), callCharge, cdr.DestinationNumber.ToString());
+                                        
+                                        newUserRecord.AddCallDetail(newCallRecord, DirectionType.OUTBOUND);
+                                        newInvoice.CallRecords.Add(newUserRecord);
                                         invoices.Add(newInvoice);
                                     }
                                 }
@@ -139,10 +153,9 @@ namespace BillingProcess.Billing.Services
                                                 .Where(a => a.PhoneNumber == cdr.DestinationNumber.ToString())
                                                 .AsNoTracking()
                                                 .FirstOrDefault() ?? throw new ArgumentException("Failed to retrieve user");
-
                             if (userReceiving != null)
                             {
-                                // get user rates based on rate type matching with direction
+                                // get user rates based on rate type matching with inbound direction
                                 var userRate = _dbContext.Rates
                                                 .Include(p => p.Plan)
                                                 .Where(r => r.Plan.Id == userReceiving.Company.Plan.Id && r.RateType == RateType.InboundCall.ToString()).OrderBy(a => a.Priority)
@@ -154,17 +167,19 @@ namespace BillingProcess.Billing.Services
                                     // get existing company invoice
                                     var existingInvoice = invoices.Where(a => a.Company.Id == userReceiving.Company.Id).FirstOrDefault();
                                     // check if user has a record in the company
-                                    if (existingInvoice.UserCalls.Where(u => u.User.Id == userReceiving.Id).Any())
+                                    if (existingInvoice.CallRecords.Where(u => u.User.Id == userReceiving.Id).Any())
                                     {
                                         if (userRate != null)
                                         {
                                             // get exising user call records
-                                            var existingUserRecord = invoices.Where(a => a.Company.Id == userReceiving.Company.Id).Select(a => a.UserCalls.Where(a => a.User.Id == userReceiving.Id).FirstOrDefault()).FirstOrDefault();
+                                            var existingUserRecord = invoices.Where(a => a.Company.Id == userReceiving.Company.Id).Select(a => a.CallRecords.Where(a => a.User.Id == userReceiving.Id).FirstOrDefault()).FirstOrDefault();
                                             // get user rate based on destination number against filter
                                             var getFilter = userRate.FirstOrDefault(a => a.Filter == "*" || Regex.IsMatch(cdr.DestinationNumber.ToString(), a.Filter)) ?? throw new ArgumentException("Failed to retrieve rate to charge");
 
                                             // formula to calculate call charge
                                             var callCharge = cdr.Duration * (getFilter.RateValue / 60);
+
+                                            // add new call detail
                                             var callDetail = new CallDetailApiModel(Guid.NewGuid(), cdr.ConnectDateTime, new TimeSpan(0, 0, cdr.Duration).ToString(), (getFilter.RateValue / 60), callCharge, callFrom: cdr.SourceNumber.ToString());
 
                                             // update existing user call record with new call charge
@@ -182,27 +197,39 @@ namespace BillingProcess.Billing.Services
                                             var callCharge = cdr.Duration * (getFilter.RateValue / 60);
 
                                             // add new user call record against the company invoice
-                                            existingInvoice.UserCalls.Add(new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userReceiving), 1, callCharge, cdr.Duration));
+                                            var newUserRecord = new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userReceiving), 1, callCharge, cdr.Duration);
+
+                                            // add new call detail to the user
+                                            var newCallRecord = new CallDetailApiModel(Guid.NewGuid(), cdr.ConnectDateTime, new TimeSpan(0, 0, cdr.Duration).ToString(), (getFilter.RateValue / 60), callCharge, callFrom: cdr.SourceNumber.ToString());
+                                            newUserRecord.AddCallDetail(newCallRecord, DirectionType.INBOUND);
+                                            existingInvoice.CallRecords.Add(newUserRecord);
                                         }
 
                                     }
 
                                 }
-                                // create new invoice against a company
+                                // create new invoice against a company for a new user
                                 else
                                 {
                                     if (userRate != null)
                                     {
+                                        // create new invoice against a company
+                                        var newInvoice = new InvoiceApiModel(Guid.NewGuid(), CompanyMapper.EntityToApi(userReceiving.Company));
+
                                         // get user rate based on destination number against filter
                                         var getFilter = userRate.FirstOrDefault(a => a.Filter == "*" || Regex.IsMatch(cdr.DestinationNumber.ToString(), a.Filter));
 
                                         // formula to calculate call charge
                                         var callCharge = cdr.Duration * (getFilter.RateValue / 60);
 
-                                        // create new invoice against a company
-                                        var newInvoice = new InvoiceApiModel(Guid.NewGuid(), CompanyMapper.EntityToApi(userReceiving.Company));
-                                        // add new user call record to the new invoice
-                                        newInvoice.UserCalls.Add(new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userReceiving), 1, callCharge, cdr.Duration));
+                                        // add new user call detail and charge record to the new invoice
+                                        var newUserRecord = new UserChargeApiModel(Guid.NewGuid(), UserMapper.EntityToApi(userReceiving), 1, callCharge, cdr.Duration);
+
+                                        // add new call detail
+                                        var newCallRecord = new CallDetailApiModel(Guid.NewGuid(), cdr.ConnectDateTime, new TimeSpan(0, 0, cdr.Duration).ToString(), (getFilter.RateValue / 60), callCharge, callFrom: cdr.SourceNumber.ToString());
+                                        
+                                        newUserRecord.AddCallDetail(newCallRecord, DirectionType.INBOUND);
+                                        newInvoice.CallRecords.Add(newUserRecord);
                                         invoices.Add(newInvoice);
                                     }
                                 }
